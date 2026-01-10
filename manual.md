@@ -69,3 +69,32 @@ Ao usar o node **"Execute Command"** no n8n:
 1.  **n8n (Passo 1):** Executa comando da **FASE 1**.
 2.  **n8n (Wait):** Aguarda input humano (ex: via Webhook ou Form) com o código 2FA.
 3.  **n8n (Passo 2):** Recebe o código e executa comando da **FASE 2** passando `--code $nHeookInput`.
+
+---
+
+## FASE 3: Execução via API (Docker / Web Service)
+
+Se você optar por rodar via Docker (recomendado para Render.com ou Railway), o script roda como um servidor HTTP.
+
+### Endpoint 1: Iniciar (`POST /api/v1/auth/init`)
+*   **Body:** `{ "email": "seu@email.com" }`
+*   **Retorno:** JSON contendo `session_state`. Guarde este JSON no n8n!
+
+### Endpoint 2: Completar (`POST /api/v1/auth/complete`)
+*   **Body:**
+    ```json
+    {
+      "email": "seu@email.com",
+      "code": "123456",
+      "account_name": "Nome Cliente",
+      "session_state": { ... json_recebido_do_init ... }
+    }
+    ```
+*   **Retorno:** Confirmação de sucesso.
+
+### Como Rodar (Docker)
+```bash
+docker build -t crm-automation .
+docker run -p 8000:8000 crm-automation
+# A API estará em http://localhost:8000
+```

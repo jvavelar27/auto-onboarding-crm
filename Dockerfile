@@ -15,6 +15,8 @@ RUN playwright install --with-deps chromium
 
 COPY . .
 
-ENTRYPOINT ["python", "-m", "crm_automation.main"]
-# CMD can be overridden
-CMD ["--help"]
+# Expose port for API
+EXPOSE 8000
+
+# Run FastAPI with Uvicorn
+CMD ["uvicorn", "crm_automation.api:app", "--host", "0.0.0.0", "--port", "8000"]
