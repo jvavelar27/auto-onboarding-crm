@@ -56,8 +56,12 @@ def init_auth(request: InitAuthRequest):
         try:
             login_page = LoginPage(page)
             
-            # Navigate to Login
-            page.goto(Config.URL_LOGIN if hasattr(Config, 'URL_LOGIN') else "https://crm.infinitegear.app/login")
+            # Navigate to Login - Relaxed wait condition and increased timeout
+            page.goto(
+                Config.URL_LOGIN if hasattr(Config, 'URL_LOGIN') else "https://crm.infinitegear.app/login",
+                timeout=60000, 
+                wait_until='domcontentloaded'
+            )
             
             # Execute Phase 1
             login_page.initiate_login(request.email)
@@ -105,8 +109,12 @@ def complete_auth(request: CompleteAuthRequest):
             panels_page = PanelsPage(page)
             contacts_page = ContactsPage(page)
             
-            # Refesh/Go to login to ensure UI state (as verified in CLI)
-            page.goto(Config.URL_LOGIN if hasattr(Config, 'URL_LOGIN') else "https://crm.infinitegear.app/login")
+            # Navigate to Login - Relaxed wait condition and increased timeout
+            page.goto(
+                Config.URL_LOGIN if hasattr(Config, 'URL_LOGIN') else "https://crm.infinitegear.app/login",
+                timeout=60000, 
+                wait_until='domcontentloaded'
+            )
             
             # Re-enter email to trigger code screen (Idempotency fix)
             login_page.initiate_login(request.email)
