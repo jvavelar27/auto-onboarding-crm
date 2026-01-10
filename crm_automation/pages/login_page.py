@@ -19,9 +19,15 @@ class LoginPage(BasePage):
             
             if not self.dry_run:
                 self.page.wait_for_timeout(1000)
-                self.page.wait_for_selector(Selectors.LOGIN_EMAIL_INPUT, state="visible", timeout=10000)
 
-        # 3. Fill Email
+        # 3. Fill Email - Explicit Wait for Visibility (Critical for Slow Render/Network)
+        if not self.dry_run:
+            try:
+                self.page.wait_for_selector(Selectors.LOGIN_EMAIL_INPUT, state="visible", timeout=60000)
+            except Exception as e:
+                logger.error(f"Timeout waiting for Email Input: {e}")
+                raise e
+
         self.fill(Selectors.LOGIN_EMAIL_INPUT, email, "Email Input")
         
         # 4. Click Check/Next to send code
