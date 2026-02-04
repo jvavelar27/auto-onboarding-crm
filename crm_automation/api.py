@@ -53,7 +53,13 @@ def init_auth(request: InitAuthRequest):
             # Helper to find executable
             executable_path = None
             try:
-                search_roots = ["playwright_browsers", "/var/task/playwright_browsers", "./playwright_browsers"]
+                # Search inside api/ folder as well since we moved it there
+                search_roots = [
+                    "api/playwright_browsers", 
+                    "playwright_browsers", 
+                    os.path.join(os.path.dirname(__file__), "../api/playwright_browsers"),
+                    "/var/task/api/playwright_browsers"
+                ]
                 logger.info(f"Searching for chromium binary in: {search_roots}")
                 
                 for root_dir in search_roots:

@@ -1,10 +1,4 @@
 {
-    "functions": {
-        "api/**": {
-            "maxDuration": 60,
-            "includeFiles": "playwright_browsers/**"
-        }
-    },
     "rewrites": [
         {
             "source": "/(.*)",
