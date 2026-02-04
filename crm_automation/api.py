@@ -50,35 +50,55 @@ def init_auth(request: InitAuthRequest):
     
     try:
         with sync_playwright() as p:
-            # Debugging: Inspect File System
+            # Helper to find executable
+            executable_path = None
             try:
-                import glob
-                # Check the new expected path
-                local_browsers_path = "playwright_browsers"
-                if os.path.exists(local_browsers_path):
-                    logger.info(f"Custom browsers found at {local_browsers_path}: {os.listdir(local_browsers_path)}")
-                else:
-                    logger.warning(f"Custom browsers path NOT found: {local_browsers_path}")
-                    
-                # Keep checking the vendor path just in case
-                vendor_path = "/var/task/_vendor/playwright/driver/package/.local-browsers/"
-                if os.path.exists(vendor_path):
-                    logger.info(f"Vendor browsers found at {vendor_path}: {os.listdir(vendor_path)}")
+                search_roots = ["playwright_browsers", "/var/task/playwright_browsers", "./playwright_browsers"]
+                logger.info(f"Searching for chromium binary in: {search_roots}")
                 
-                logger.info(f"Listing root /var/task: {os.listdir('/var/task')}")
+                for root_dir in search_roots:
+                    if os.path.exists(root_dir):
+                        for root, dirs, files in os.walk(root_dir):
+                            # Look for the actual executable. 
+                            # Playwright usually looks for 'chrome' or 'chrome-headless-shell' depending on version
+                            if "chrome" in files and os.access(os.path.join(root, "chrome"), os.X_OK):
+                                executable_path = os.path.join(root, "chrome")
+                                break
+                            if "chrome-headless-shell" in files:
+                                executable_path = os.path.join(root, "chrome-headless-shell")
+                                break
+                    if executable_path:
+                        break
+                
+                if executable_path:
+                    logger.info(f"Found chromium at: {executable_path}")
+                else:
+                    logger.warning("Could not find chromium binary in custom paths.")
+                    # Fallback debugging
+                    try:
+                        import glob
+                        logger.info(f"Glob scan of playwright_browsers: {glob.glob('playwright_browsers/**/*')}")
+                    except: pass
+            
             except Exception as e:
-                logger.error(f"Debug inspect error: {e}")
+                logger.error(f"Error searching for executable: {e}")
 
-            # Vercel/Serverless often requires these args
-            browser = p.chromium.launch(
-                headless=True,
-                args=[
-                    "--no-sandbox",
+            # Launch args
+            launch_args = {
+                "headless": True,
+                "args": [
+                    "--no-sandbox", 
                     "--disable-setuid-sandbox",
                     "--disable-dev-shm-usage",
-                    "--single-process" # Sometimes helps in lambda-like envs
+                    "--single-process"
                 ]
-            )
+            }
+            
+            if executable_path:
+                launch_args["executable_path"] = executable_path
+
+            logger.info(f"Launching browser with args: {launch_args}")
+            browser = p.chromium.launch(**launch_args)
             context = browser.new_context()
             page = context.new_page()
             
