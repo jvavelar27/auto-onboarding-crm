@@ -79,6 +79,11 @@ def init_auth(request: InitAuthRequest):
             
         except Exception as e:
             logger.error(f"API Init Error: {e}")
+            try:
+                logger.error(f"Page Title on Error: {page.title()}")
+                logger.error(f"Page Content Snippet: {page.content()[:500]}")
+            except:
+                pass
             browser.close()
             raise HTTPException(status_code=500, detail=str(e))
 

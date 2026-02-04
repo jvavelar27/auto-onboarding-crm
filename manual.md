@@ -2,6 +2,38 @@
 
 Este manual descreve como executar o script de automação do CRM dividindo o processo de login em duas etapas (Solicitação de 2FA e Envio de Código), ideal para integrações com n8n ou execução via linha de comando.
 
+## Instalação do Zero (Windows Terminal / PowerShell)
+
+Siga estes passos se você está configurando o projeto pela primeira vez em uma nova máquina Windows.
+
+**1. Clonar o Repositório:**
+```powershell
+git clone https://github.com/jvavelar27/auto-onboarding-crm.git
+cd auto-onboarding-crm
+```
+
+**2. Criar Ambiente Virtual (Python):**
+```powershell
+# Cria a pasta venv
+python -m venv venv
+
+# Ativa o ambiente (Obrigatório antes de rodar qualquer coisa)
+.\venv\Scripts\Activate.ps1
+```
+*(Se der erro de permissão no PowerShell, rode: `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`)*
+
+**3. Instalar Dependências:**
+```powershell
+pip install -r requirements.txt
+```
+
+**4. Instalar Navegadores do Playwright:**
+```powershell
+playwright install chromium
+```
+
+---
+
 ## Pré-requisitos
 
 *   Python instalado.
@@ -98,3 +130,24 @@ docker build -t crm-automation .
 docker run -p 8000:8000 crm-automation
 # A API estará em http://localhost:8000
 ```
+
+## Opção 2: Deploy no Railway (Recomendado/Trial)
+
+O Railway é uma alternativa excelente ao Render, geralmente com hardware mais rápido no trial.
+
+1. Crie conta em [railway.app](https://railway.app/).
+2. Clique em **"New Project"** -> **"Deploy from GitHub repo"**.
+3. Selecione este repositório (`auto-onboarding-crm`).
+4. O Railway vai detectar o `Dockerfile` automaticamente.
+5. **Configuração de Porta:**
+   - Vá em **Settings** -> **Networking**.
+   - Se não tiver uma porta definida, clique em "Generate Domain".
+   - O código já roda na porta `8000`, mas o Railway pode injetar a variável `PORT`.
+   - *Dica:* Se der erro de porta, vá em **Variables** e adicione `PORT` = `8000`.
+6. O deploy deve começar automaticamente.
+7. Pegue a URL pública gerada (ex: `https://auto-onboarding-crm.up.railway.app`).
+
+### Teste no Railway
+Use a mesma lógica do Render, apenas trocando a URL base.
+- **GET** `/health` -> Deve responder rápido.
+- **POST** `/api/v1/auth/init` -> Deve iniciar o login.
