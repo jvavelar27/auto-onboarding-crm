@@ -50,6 +50,19 @@ def init_auth(request: InitAuthRequest):
     
     try:
         with sync_playwright() as p:
+            # Debugging: Inspect File System
+            try:
+                import glob
+                local_browsers_path = "/var/task/_vendor/playwright/driver/package/.local-browsers/"
+                if os.path.exists(local_browsers_path):
+                    logger.info(f"Local browsers found at {local_browsers_path}: {os.listdir(local_browsers_path)}")
+                else:
+                    logger.warning(f"Local browsers path NOT found: {local_browsers_path}")
+                    # Search around
+                    logger.info(f"Listing /var/task: {os.listdir('/var/task')}")
+            except Exception as e:
+                logger.error(f"Debug inspect error: {e}")
+
             # Vercel/Serverless often requires these args
             browser = p.chromium.launch(
                 headless=True,
