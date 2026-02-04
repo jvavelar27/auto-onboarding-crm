@@ -60,34 +60,11 @@ def init_auth(request: InitAuthRequest):
                     os.path.join(os.path.dirname(__file__), "../api/playwright_browsers"),
                     "/var/task/api/playwright_browsers"
                 ]
-                logger.info(f"Searching for chromium binary in: {search_roots}")
-                
-                for root_dir in search_roots:
-                    if os.path.exists(root_dir):
-                        for root, dirs, files in os.walk(root_dir):
-                            # Look for the actual executable. 
-                            # Playwright usually looks for 'chrome' or 'chrome-headless-shell' depending on version
-                            if "chrome" in files and os.access(os.path.join(root, "chrome"), os.X_OK):
-                                executable_path = os.path.join(root, "chrome")
-                                break
-                            if "chrome-headless-shell" in files:
-                                executable_path = os.path.join(root, "chrome-headless-shell")
-                                break
-                    if executable_path:
-                        break
-                
-                if executable_path:
-                    logger.info(f"Found chromium at: {executable_path}")
-                else:
-                    logger.warning("Could not find chromium binary in custom paths.")
-                    # Fallback debugging
-                    try:
-                        import glob
-                        logger.info(f"Glob scan of playwright_browsers: {glob.glob('playwright_browsers/**/*')}")
-                    except: pass
-            
+                # logger.info(f"Searching for chromium binary in: {search_roots}")
+                # Removed detailed manual search to rely on PLAYWRIGHT_BROWSERS_PATH=0 behavior first
+                pass
             except Exception as e:
-                logger.error(f"Error searching for executable: {e}")
+                logger.error(f"Debug inspect error: {e}")
 
             # Launch args
             launch_args = {
@@ -100,8 +77,9 @@ def init_auth(request: InitAuthRequest):
                 ]
             }
             
-            if executable_path:
-                launch_args["executable_path"] = executable_path
+            # Note: We rely on PLAYWRIGHT_BROWSERS_PATH=0 handling executable_path automatically
+            # If manual search was successful in previous iterations we could add it back, 
+            # but for now we trust the bundling.
 
             logger.info(f"Launching browser with args: {launch_args}")
             browser = p.chromium.launch(**launch_args)
