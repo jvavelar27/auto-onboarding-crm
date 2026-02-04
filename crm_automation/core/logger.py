@@ -13,9 +13,13 @@ def setup_logger(name="crm_automation", log_file="crm_automation.log", level=log
     )
     
     # File Handler
-    file_handler = logging.FileHandler(log_file, encoding='utf-8')
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
+    try:
+        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+    except OSError:
+        # Ignore file logging if filesystem is read-only (e.g. Vercel)
+        pass
     
     # Console Handler
     console_handler = logging.StreamHandler(sys.stdout)
@@ -25,4 +29,10 @@ def setup_logger(name="crm_automation", log_file="crm_automation.log", level=log
     return logger
 
 # Default logger instance
-logger = setup_logger()
+try:
+    logger = setup_logger()
+except Exception as e:
+    # Fallback if even basic setup fails
+    print(f"Failed to setup logger: {e}")
+    logger = logging.getLogger("crm_automation")
+    logger.addHandler(logging.StreamHandler(sys.stdout))
