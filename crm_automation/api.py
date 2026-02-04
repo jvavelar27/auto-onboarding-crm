@@ -48,44 +48,61 @@ def init_auth(request: InitAuthRequest):
     """
     logger.info(f"API: Initiating auth for {request.email}")
     
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True) # Always headless in API/Docker
-        context = browser.new_context()
-        page = context.new_page()
-        
-        try:
-            login_page = LoginPage(page)
-            
-            # Navigate to Login - Relaxed wait condition and increased timeout
-            page.goto(
-                Config.URL_LOGIN if hasattr(Config, 'URL_LOGIN') else "https://crm.infinitegear.app/login",
-                timeout=60000, 
-                wait_until='domcontentloaded'
+    try:
+        with sync_playwright() as p:
+            # Vercel/Serverless often requires these args
+            browser = p.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--single-process" # Sometimes helps in lambda-like envs
+                ]
             )
+            context = browser.new_context()
+            page = context.new_page()
             
-            # Execute Phase 1
-            login_page.initiate_login(request.email)
-            
-            # Extract State
-            state = context.storage_state()
-            
-            browser.close()
-            
-            return {
-                "status": "waiting_code",
-                "message": "Auth initiated. Please provide the 2FA code sent to email.",
-                "session_state": state
-            }
-            
-        except Exception as e:
-            logger.error(f"API Init Error: {e}")
             try:
-                logger.error(f"Page Title on Error: {page.title()}")
-                logger.error(f"Page Content Snippet: {page.content()[:500]}")
-            except:
-                pass
-            browser.close()
-            raise HTTPException(status_code=500, detail=str(e))
+                login_page = LoginPage(page)
+                
+                # Navigate to Login - Relaxed wait condition and increased timeout
+                page.goto(
+                    Config.URL_LOGIN if hasattr(Config, 'URL_LOGIN') else "https://crm.infinitegear.app/login",
+                    timeout=60000, 
+                    wait_until='domcontentloaded'
+                )
+                
+                # Execute Phase 1
+                login_page.initiate_login(request.email)
+                
+                # Extract State
+                state = context.storage_state()
+                
+                browser.close()
+                
+                return {
+                    "status": "waiting_code",
+                    "message": "Auth initiated. Please provide the 2FA code sent to email.",
+                    "session_state": state
+                }
+                
+            except Exception as e:
+                logger.error(f"API Init Page Error: {e}")
+                import traceback
+                traceback.print_exc()
+                try:
+                    logger.error(f"Page Title on Error: {page.title()}")
+                except:
+                    pass
+                browser.close()
+                raise e
+
+    except Exception as e:
+        logger.error(f"API Critical Error (Playwright Launch?): {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/v1/auth/complete", response_model=CompleteAuthResponse)
 def complete_auth(request: CompleteAuthRequest):
