@@ -54,7 +54,7 @@ def init_auth(request: InitAuthRequest):
             try:
                 import glob
                 # Check the new expected path
-                local_browsers_path = "playwright-browsers"
+                local_browsers_path = "playwright_browsers"
                 if os.path.exists(local_browsers_path):
                     logger.info(f"Custom browsers found at {local_browsers_path}: {os.listdir(local_browsers_path)}")
                 else:
