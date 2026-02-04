@@ -2,5 +2,6 @@
 echo "Installing dependencies..."
 pip install -r requirements.txt
 echo "Installing Playwright browsers..."
-playwright install
+export PLAYWRIGHT_BROWSERS_PATH=playwright-browsers
+playwright install chromium
 echo "Playwright installation complete."

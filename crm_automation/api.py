@@ -53,13 +53,19 @@ def init_auth(request: InitAuthRequest):
             # Debugging: Inspect File System
             try:
                 import glob
-                local_browsers_path = "/var/task/_vendor/playwright/driver/package/.local-browsers/"
+                # Check the new expected path
+                local_browsers_path = "playwright-browsers"
                 if os.path.exists(local_browsers_path):
-                    logger.info(f"Local browsers found at {local_browsers_path}: {os.listdir(local_browsers_path)}")
+                    logger.info(f"Custom browsers found at {local_browsers_path}: {os.listdir(local_browsers_path)}")
                 else:
-                    logger.warning(f"Local browsers path NOT found: {local_browsers_path}")
-                    # Search around
-                    logger.info(f"Listing /var/task: {os.listdir('/var/task')}")
+                    logger.warning(f"Custom browsers path NOT found: {local_browsers_path}")
+                    
+                # Keep checking the vendor path just in case
+                vendor_path = "/var/task/_vendor/playwright/driver/package/.local-browsers/"
+                if os.path.exists(vendor_path):
+                    logger.info(f"Vendor browsers found at {vendor_path}: {os.listdir(vendor_path)}")
+                
+                logger.info(f"Listing root /var/task: {os.listdir('/var/task')}")
             except Exception as e:
                 logger.error(f"Debug inspect error: {e}")
 
